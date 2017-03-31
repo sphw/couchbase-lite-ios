@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 @class CBLSubdocument;
+@class CBLBlob;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -55,6 +56,10 @@ NS_ASSUME_NONNULL_BEGIN
     NOTE: This is not a generic date parser! It only recognizes the ISO-8601 format, with or
     without milliseconds. */
 - (nullable NSDate*) dateForKey: (NSString*)key;
+
+/** Gets a property's value as a Blob.
+    Returns nil if the property doesn't exist, or its value is not a Blob. */
+- (nullable CBLBlob*) blobForKey: (NSString*)key;
 
 /** Get a property's value as a Subdocument, which is a mapping object of a Dictionary
     value to provide property type accessors.

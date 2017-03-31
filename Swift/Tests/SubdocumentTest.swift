@@ -9,6 +9,7 @@
 import XCTest
 import CouchbaseLiteSwift
 
+
 class SubdocumentTest: CBLTestCase {
     
     var doc: Document!
@@ -29,9 +30,9 @@ class SubdocumentTest: CBLTestCase {
     }
     
     func testNewSubdoc() throws {
-        let s: Subdocument? = doc["address"]
+        let s = doc["address"].subdocument
         XCTAssertNil(s)
-        XCTAssertNil(doc.property("address"))
+        XCTAssertNil(doc.getValue("address"))
         
         var address = Subdocument()
         XCTAssertFalse(address.exists)
@@ -39,70 +40,70 @@ class SubdocumentTest: CBLTestCase {
         XCTAssertNil(address.properties)
         
         address["street"] = "1 Space Ave."
-        XCTAssertEqual(address["street"], "1 Space Ave.")
+        XCTAssertEqual(address["street"].string, "1 Space Ave.")
         XCTAssertEqual(address.properties?["street"] as? String, "1 Space Ave.")
         
-        doc["address"] = address
-        XCTAssert(doc.property("address") as? Subdocument === address)
+        doc["address"] = PropertyValue(address)
+        XCTAssert(doc.getValue("address") as? Subdocument === address)
         XCTAssert(address.document === doc)
         
         try doc.save()
         XCTAssert(address.exists)
         XCTAssert(address.document === doc)
-        XCTAssertEqual(address["street"], "1 Space Ave.")
+        XCTAssertEqual(address["street"].string, "1 Space Ave.")
         XCTAssertEqual(address.properties?["street"] as? String, "1 Space Ave.")
         
         try reopenDB()
-        address = doc["address"]!
+        address = doc["address"].subdocument!
         XCTAssert(address.exists)
         XCTAssert(address.document === doc)
-        XCTAssertEqual(address["street"], "1 Space Ave.")
+        XCTAssertEqual(address["street"].string, "1 Space Ave.")
         XCTAssertEqual(address.properties?["street"] as? String, "1 Space Ave.")
     }
     
     func testGetSubdocument() throws {
-        var address: Subdocument? = doc["address"]
+        var address = doc["address"].subdocument
         XCTAssertNil(address)
-        XCTAssertNil(doc.property("address"))
+        XCTAssertNil(doc.getValue("address"))
         
         doc.properties = ["address": ["street": "1 Space Ave."]]
         
-        address = doc["address"]
+        address = doc["address"].subdocument
         XCTAssertNotNil(address)
-        XCTAssert(address! === doc.property("address") as? Subdocument)
+        XCTAssert(address! === doc.getValue("address") as? Subdocument)
         XCTAssertFalse(address!.exists)
         XCTAssert(address!.document === doc)
-        XCTAssertEqual(address!["street"], "1 Space Ave.")
+        XCTAssertEqual(address?["street"].string, "1 Space Ave.")
         XCTAssertEqual(address!.properties?["street"] as? String, "1 Space Ave.")
         
         try doc.save()
         XCTAssert(address!.exists)
         XCTAssert(address?.document === doc)
-        XCTAssertEqual(address?["street"], "1 Space Ave.")
+        XCTAssertEqual(address?["street"].string, "1 Space Ave.")
         XCTAssertEqual(address?.properties?["street"] as? String, "1 Space Ave.")
         
         try reopenDB()
-        address = doc["address"]!
-        XCTAssert(address! === doc.property("address") as? Subdocument)
+        address = doc["address"].subdocument!
+        XCTAssert(address! === doc.getValue("address") as? Subdocument)
         XCTAssert(address!.exists)
         XCTAssert(address!.document === doc)
-        XCTAssertEqual(address!["street"], "1 Space Ave.")
+        XCTAssertEqual(address?["street"].string, "1 Space Ave.")
         XCTAssertEqual(address!.properties?["street"] as? String, "1 Space Ave.")
     }
     
     func testNestedSubdocuments() {
-        doc["level1"] = Subdocument()
-        doc["level1"]!["name"] = "n1"
+        doc["level1"] = PropertyValue(Subdocument())
+        doc["level1"]["name"] = "n1"
         
-        doc["level1"]!["level2"] = Subdocument()
-        doc["level1"]!["level2"]!["name"] = "n2"
+        doc["level1"]["level2"] = PropertyValue(Subdocument())
+        doc["level1"]["level2"]["name"] = "n2"
         
-        doc["level1"]!["level2"]!["level3"] = Subdocument()
-        doc["level1"]!["level2"]!["level3"]!["name"] = "n3"
+        doc["level1"]["level2"]["level3"] = PropertyValue(Subdocument())
+        doc["level1"]["level2"]["level3"]["name"] = "n3"
         
-        let level1: Subdocument? = doc["level1"]
-        let level2: Subdocument? = doc["level1"]?["level2"]
-        let level3: Subdocument? = doc["level1"]?["level2"]?["level3"]
+        let level1: Subdocument? = doc["level1"].subdocument
+        let level2: Subdocument? = doc["level1"]["level2"].subdocument
+        let level3: Subdocument? = doc["level1"]["level2"]["level3"].subdocument
         
         XCTAssertNotNil(level1)
         XCTAssertNotNil(level2)
@@ -112,24 +113,24 @@ class SubdocumentTest: CBLTestCase {
         XCTAssertFalse(level2!.exists)
         XCTAssertFalse(level3!.exists)
         
-        XCTAssertEqual(level1!["name"], "n1")
-        XCTAssert(level1!.property("level2") as? Subdocument === level2)
-        XCTAssertEqual(level2!["name"], "n2")
-        XCTAssert(level2!.property("level3") as? Subdocument === level3)
-        XCTAssertEqual(level3!["name"], "n3")
+        XCTAssertEqual(level1!["name"].string, "n1")
+        XCTAssert(level1!.getValue("level2") as? Subdocument === level2)
+        XCTAssertEqual(level2!["name"].string, "n2")
+        XCTAssert(level2!.getValue("level3") as? Subdocument === level3)
+        XCTAssertEqual(level3!["name"].string, "n3")
     }
     
     func testSetDictionary() throws {
         doc["address"] = ["street": "1 Space Ave."]
         
-        var address: Subdocument? = doc["address"]
+        var address = doc["address"].subdocument
         XCTAssertEqual(address?.properties?.count, 1)
         XCTAssertEqual(address?.properties?["street"] as? String, "1 Space Ave.")
         
         try doc.save()
         try reopenDB()
         
-        address = doc["address"]
+        address = doc["address"].subdocument
         XCTAssertEqual(address?.properties?.count, 1)
         XCTAssertEqual(address?.properties?["street"] as? String, "1 Space Ave.")
     }
@@ -141,27 +142,27 @@ class SubdocumentTest: CBLTestCase {
                             "phones":["mobile": "650-123-4567"]],
                           "references": [["name": "Scott"], ["name": "Sam"]]]
         
-        let address: Subdocument? = doc["address"]
+        let address = doc["address"].subdocument
         XCTAssertNotNil(address)
         XCTAssert(address?.document === doc)
-        XCTAssertEqual(address?["street"], "1 Star Way.")
+        XCTAssertEqual(address?["street"].string, "1 Star Way.")
         
-        let phones: Subdocument? = address?["phones"]
+        let phones = address?["phones"].subdocument
         XCTAssertNotNil(phones)
         XCTAssert(phones?.document === doc)
-        XCTAssertEqual(phones?["mobile"], "650-123-4567")
+        XCTAssertEqual(phones?["mobile"].string, "650-123-4567")
         
-        let references: [Any]? = doc["references"]
+        let references = doc["references"].value as? [Any]
         XCTAssertNotNil(references)
         XCTAssertEqual(references?.count, 2)
         
         let r1: Subdocument? = references?[0] as? Subdocument
         XCTAssertNotNil(r1)
-        XCTAssertEqual(r1?["name"], "Scott")
+        XCTAssertEqual(r1?["name"].string, "Scott")
         
         let r2: Subdocument? = references?[1] as? Subdocument
         XCTAssertNotNil(r2)
-        XCTAssertEqual(r2?["name"], "Sam")
+        XCTAssertEqual(r2?["name"].string, "Sam")
     }
     
     func testCopySubdocument() throws {
@@ -170,24 +171,24 @@ class SubdocumentTest: CBLTestCase {
                             "street": "1 Star Way.",
                             "phones":["mobile": "650-123-4567"]]]
         
-        let address: Subdocument = doc["address"]!
-        XCTAssert(address.document === doc)
-        let street: String = address["street"]!
+        let address = doc["address"].subdocument
+        XCTAssert(address?.document === doc)
+        let street = address?["street"].string
         
-        let phones: Subdocument = address["phones"]!
-        XCTAssert(phones.document === doc)
-        let mobile: String = phones["mobile"]!
+        let phones = address?["phones"].subdocument
+        XCTAssert(phones?.document === doc)
+        let mobile = phones?["mobile"].string
         
-        let address2: Subdocument? = address.copy() as? Subdocument
+        let address2 = address?.copy() as? Subdocument
         XCTAssertNotNil(address2);
         XCTAssert(address !== address2)
         XCTAssertNil(address2!.document)
-        XCTAssertEqual(street, address2!.property("street") as? String)
+        XCTAssertEqual(street, address2?.getValue("street") as? String)
         
-        let phone2: Subdocument? = address2!["phones"]
+        let phone2 = address2?["phones"].subdocument
         XCTAssertNotNil(phone2)
         XCTAssertNil(phone2?.document)
-        XCTAssertEqual(mobile, phone2?.property("mobile") as? String)
+        XCTAssertEqual(mobile, phone2?.getValue("mobile") as? String)
     }
     
     func testSetSubdocumentFromAnotherKey() {
@@ -196,33 +197,33 @@ class SubdocumentTest: CBLTestCase {
                             "street": "1 Star Way.",
                             "phones":["mobile": "650-123-4567"]]]
         
-        let address: Subdocument = doc["address"]!
-        XCTAssert(address.document === doc)
-        let street: String = address["street"]!
+        let address = doc["address"].subdocument
+        XCTAssert(address?.document === doc)
+        let street = address?["street"].string
         
-        let phones: Subdocument = address["phones"]!
-        XCTAssert(phones.document === doc)
-        let mobile: String = phones["mobile"]!
+        let phones = address?["phones"].subdocument
+        XCTAssert(phones?.document === doc)
+        let mobile = phones?["mobile"].string
         
-        doc["address2"] = address
-        let address2: Subdocument? = doc["address2"]
+        doc["address2"] = PropertyValue(address)
+        let address2 = doc["address2"].subdocument
         XCTAssertNotNil(address2)
         XCTAssert(address !== address2)
         XCTAssert(address2?.document === doc)
-        XCTAssertEqual(street, address2?.property("street") as? String)
+        XCTAssertEqual(street, address2?.getValue("street") as? String)
         
-        let phones2: Subdocument? = address2?["phones"];
+        let phones2 = address2?["phones"].subdocument
         XCTAssertNotNil(phones2)
         XCTAssert(phones !== phones2)
         XCTAssert(phones2?.document === doc)
-        XCTAssertEqual(mobile, phones2?.property("mobile") as? String)
+        XCTAssertEqual(mobile, phones2?.getValue("mobile") as? String)
     }
     
     func testSubdocumentArray() {
         let dicts = [["name": "1"], ["name": "2"], ["name": "3"], ["name": "4"]]
         doc.properties = ["subdocs": dicts]
         
-        var subdocs: [Any]? = doc["subdocs"]
+        var subdocs = doc["subdocs"].value as? [Any]
         XCTAssertEqual(subdocs?.count, 4)
         
         let s1 = subdocs?[0] as? Subdocument
@@ -230,19 +231,19 @@ class SubdocumentTest: CBLTestCase {
         let s3 = subdocs?[2] as? Subdocument
         let s4 = subdocs?[3] as? Subdocument
         
-        XCTAssertEqual(s1?.property("name") as? String, "1")
-        XCTAssertEqual(s2?.property("name") as? String, "2")
-        XCTAssertEqual(s3?.property("name") as? String, "3")
-        XCTAssertEqual(s4?.property("name") as? String, "4")
+        XCTAssertEqual(s1?.getValue("name") as? String, "1")
+        XCTAssertEqual(s2?.getValue("name") as? String, "2")
+        XCTAssertEqual(s3?.getValue("name") as? String, "3")
+        XCTAssertEqual(s4?.getValue("name") as? String, "4")
         
         // Make changes
         
         let s5 = Subdocument()
         s5["name"] = "5"
         
-        doc["subdocs"] = [s5, "dummy", s2!, ["name": "6"], s1!] as [Any]
+        doc["subdocs"] = [s5, "dummy", s2!, ["name": "6"], s1!]
         
-        var subdocs2: [Any]? = doc["subdocs"]
+        var subdocs2 = doc["subdocs"].value as? [Any]
         XCTAssertEqual(subdocs2?.count, 5)
         
         XCTAssert(subdocs2?[0] as? Subdocument === s5)
@@ -259,39 +260,39 @@ class SubdocumentTest: CBLTestCase {
                             "phones":["mobile": "650-123-4567"]],
                           "references": [["name": "Scott"], ["name": "Sam"]]]
         
-        let address: Subdocument = doc["address"]!
-        XCTAssert(address.document === doc)
+        let address = doc["address"].subdocument
+        XCTAssert(address?.document === doc)
         
-        let phones: Subdocument = address["phones"]!
-        XCTAssert(phones.document === doc)
+        let phones = address?["phones"].subdocument
+        XCTAssert(phones?.document === doc)
         
-        let references: [Any] = doc["references"]!
-        let r1 = references[0] as! Subdocument
-        let r2 = references[1] as! Subdocument
+        let references = doc["references"].value as? [Any]
+        let r1 = references?[0] as? Subdocument
+        let r2 = references?[1] as? Subdocument
         
         doc["address"] = nil
         doc["references"] = nil
         
         // Check address:
-        XCTAssertNil(doc.property("address"))
-        XCTAssertNil(address.document)
-        XCTAssertNil(address.properties)
-        XCTAssertNil(address.property("street"))
-        XCTAssertNil(address.property("phones"))
+        XCTAssertNil(doc.getValue("address"))
+        XCTAssertNil(address?.document)
+        XCTAssertNil(address?.properties)
+        XCTAssertNil(address?.getValue("street"))
+        XCTAssertNil(address?.getValue("phones"))
         
         // Check phones:
-        XCTAssertNil(phones.document)
-        XCTAssertNil(phones.properties)
-        XCTAssertNil(phones.property("mobile"))
+        XCTAssertNil(phones?.document)
+        XCTAssertNil(phones?.properties)
+        XCTAssertNil(phones?.getValue("mobile"))
         
         // Check references:
-        XCTAssertNil(doc.property("references"))
-        XCTAssertNil(r1.document)
-        XCTAssertNil(r1.properties)
-        XCTAssertNil(r1.property("name"))
-        XCTAssertNil(r2.document)
-        XCTAssertNil(r2.properties)
-        XCTAssertNil(r2.property("name"))
+        XCTAssertNil(doc.getValue("references"))
+        XCTAssertNil(r1?.document)
+        XCTAssertNil(r1?.properties)
+        XCTAssertNil(r1?.getValue("name"))
+        XCTAssertNil(r2?.document)
+        XCTAssertNil(r2?.properties)
+        XCTAssertNil(r2?.getValue("name"))
     }
     
     func testSetDocumentPropertiesNil() {
@@ -301,50 +302,50 @@ class SubdocumentTest: CBLTestCase {
                             "phones":["mobile": "650-123-4567"]],
                           "references": [["name": "Scott"], ["name": "Sam"]]]
         
-        let address: Subdocument = doc["address"]!
-        XCTAssert(address.document === doc)
+        let address = doc["address"].subdocument
+        XCTAssert(address?.document === doc)
         
-        let phones: Subdocument = address["phones"]!
-        XCTAssert(phones.document === doc)
+        let phones = address?["phones"].subdocument
+        XCTAssert(phones?.document === doc)
         
-        let references: [Any] = doc["references"]!
-        let r1 = references[0] as! Subdocument
-        let r2 = references[1] as! Subdocument
+        let references = doc["references"].value as? [Any]
+        let r1 = references?[0] as? Subdocument
+        let r2 = references?[1] as? Subdocument
         
         doc.properties = nil
         
         // Check address:
-        XCTAssertNil(doc.property("address"))
-        XCTAssertNil(address.document)
-        XCTAssertNil(address.properties)
-        XCTAssertNil(address.property("street"))
-        XCTAssertNil(address.property("phones"))
+        XCTAssertNil(doc.getValue("address"))
+        XCTAssertNil(address?.document)
+        XCTAssertNil(address?.properties)
+        XCTAssertNil(address?.getValue("street"))
+        XCTAssertNil(address?.getValue("phones"))
         
         // Check phones:
-        XCTAssertNil(phones.document)
-        XCTAssertNil(phones.properties)
-        XCTAssertNil(phones.property("mobile"))
+        XCTAssertNil(phones?.document)
+        XCTAssertNil(phones?.properties)
+        XCTAssertNil(phones?.getValue("mobile"))
         
         // Check references:
-        XCTAssertNil(doc.property("references"))
-        XCTAssertNil(r1.document)
-        XCTAssertNil(r1.properties)
-        XCTAssertNil(r1.property("name"))
-        XCTAssertNil(r2.document)
-        XCTAssertNil(r2.properties)
-        XCTAssertNil(r2.property("name"))
+        XCTAssertNil(doc.getValue("references"))
+        XCTAssertNil(r1?.document)
+        XCTAssertNil(r1?.properties)
+        XCTAssertNil(r1?.getValue("name"))
+        XCTAssertNil(r2?.document)
+        XCTAssertNil(r2?.properties)
+        XCTAssertNil(r2?.getValue("name"))
     }
     
     func testReplaceWithNonDict() {
         let address = Subdocument()
         address["street"] = "1 Star Way."
         
-        doc["address"] = address
-        XCTAssert(doc.property("address") as? Subdocument === address)
+        doc["address"] = PropertyValue(address)
+        XCTAssert(doc.getValue("address") as? Subdocument === address)
         XCTAssert(address.document === doc)
         
         doc["address"] = "123 Space Dr."
-        XCTAssertEqual(doc["address"], "123 Space Dr.")
+        XCTAssertEqual(doc["address"].string, "123 Space Dr.")
         XCTAssertNil(address.document)
         XCTAssertNil(address.properties)
     }
@@ -353,15 +354,15 @@ class SubdocumentTest: CBLTestCase {
         let address = Subdocument()
         address["street"] = "1 Star Way."
         
-        doc["address"] = address
-        XCTAssert(doc.property("address") as? Subdocument === address)
+        doc["address"] = PropertyValue(address)
+        XCTAssert(doc.getValue("address") as? Subdocument === address)
         XCTAssert(address.document === doc)
         
         let nuAddress = Subdocument()
         nuAddress["street"] = "123 Space Dr."
-        doc["address"] = nuAddress
+        doc["address"] = PropertyValue(nuAddress)
         
-        XCTAssert(doc.property("address") as? Subdocument === nuAddress)
+        XCTAssert(doc.getValue("address") as? Subdocument === nuAddress)
         XCTAssertNil(address.document)
         XCTAssertNil(address.properties)
     }
@@ -376,15 +377,15 @@ class SubdocumentTest: CBLTestCase {
                           "expiration": ["date": "2017-03-03T07:13:46.536Z"],
                           "references": [["name": "Scott"], ["name": "Sam"]]]
         
-        let address: Subdocument = doc["address"]!
-        let phones: Subdocument = address["phones"]!
-        let work: Subdocument = doc["work"]!
-        let subscription: Subdocument = doc["subscription"]!
-        let expiration: Subdocument = doc["expiration"]!
+        let address = doc["address"].subdocument
+        let phones = address?["phones"].subdocument
+        let work = doc["work"].subdocument
+        let subscription = doc["subscription"].subdocument
+        let expiration = doc["expiration"].subdocument
         
-        var references: [Any] = doc["references"]!
-        let r1 = references[0] as! Subdocument
-        let r2 = references[1] as! Subdocument
+        var references = doc["references"].value as? [Any]
+        let r1 = references?[0] as? Subdocument
+        let r2 = references?[1] as? Subdocument
         
         let nuSubscription = Subdocument()
         nuSubscription["type"] = "platinum"
@@ -397,32 +398,32 @@ class SubdocumentTest: CBLTestCase {
                           "expiration": date,
                           "references": [["name": "Smith"]]]
         
-        XCTAssertEqual(doc["address"], "1 Star Way.")
-        XCTAssertNil(address.document)
-        XCTAssertNil(address.properties)
+        XCTAssertEqual(doc["address"].string, "1 Star Way.")
+        XCTAssertNil(address?.document)
+        XCTAssertNil(address?.properties)
         
-        XCTAssertNil(phones.document)
-        XCTAssertNil(phones.properties)
+        XCTAssertNil(phones?.document)
+        XCTAssertNil(phones?.properties)
         
-        XCTAssert(doc.property("work") as? Subdocument === work)
-        XCTAssertEqual(work["company"], "Couchbase")
-        XCTAssertEqual(work["position"], "Engineer")
+        XCTAssert(doc.getValue("work") as? Subdocument === work)
+        XCTAssertEqual(work?["company"].string, "Couchbase")
+        XCTAssertEqual(work?["position"].string, "Engineer")
         
-        XCTAssert(doc.property("subscription") as? Subdocument === nuSubscription)
-        XCTAssertNil(subscription.document)
-        XCTAssertNil(subscription.properties)
+        XCTAssert(doc.getValue("subscription") as? Subdocument === nuSubscription)
+        XCTAssertNil(subscription?.document)
+        XCTAssertNil(subscription?.properties)
         
-        XCTAssertNotNil(doc.property("expiration"))
-        XCTAssertNil(doc.property("expiration") as? Subdocument)
-        XCTAssertNil(expiration.document)
-        XCTAssertNil(expiration.properties)
+        XCTAssertNotNil(doc.getValue("expiration"))
+        XCTAssertNil(doc.getValue("expiration") as? Subdocument)
+        XCTAssertNil(expiration?.document)
+        XCTAssertNil(expiration?.properties)
         
-        references = doc["references"]!
-        XCTAssertEqual(references.count, 1)
-        XCTAssert(references[0] as! Subdocument === r1)
-        XCTAssertEqual(r1["name"], "Smith")
-        XCTAssertNil(r2.document)
-        XCTAssertNil(r2.properties)
+        references = doc["references"].value as? [Any]
+        XCTAssertEqual(references?.count, 1)
+        XCTAssert(references?[0] as! Subdocument === r1)
+        XCTAssertEqual(r1?["name"].string, "Smith")
+        XCTAssertNil(r2?.document)
+        XCTAssertNil(r2?.properties)
     }
     
     func testDeleteDocument() throws {
@@ -434,47 +435,48 @@ class SubdocumentTest: CBLTestCase {
         
         try doc.save()
         
-        let address: Subdocument = doc["address"]!
-        XCTAssert(address.document === doc)
+        let address = doc["address"].subdocument
+        XCTAssert(address?.document === doc)
         
-        let phones: Subdocument = address["phones"]!
-        XCTAssert(phones.document === doc)
+        let phones = address?["phones"].subdocument
+        XCTAssert(phones?.document === doc)
         
-        let references: [Any] = doc["references"]!
-        let r1 = references[0] as! Subdocument
-        let r2 = references[1] as! Subdocument
+        let references = doc["references"].value as? [Any]
+        let r1 = references?[0] as? Subdocument
+        let r2 = references?[1] as? Subdocument
         
         try doc.delete()
         
         // Check doc:
         XCTAssertNil(doc.properties)
-        XCTAssertNil(doc.property("name"))
-        XCTAssertNil(doc.property("address"))
-        XCTAssertNil(doc.property("references"))
+        XCTAssertNil(doc.getValue("name"))
+        XCTAssertNil(doc.getValue("address"))
+        XCTAssertNil(doc.getValue("references"))
         
         // Check address:
-        XCTAssertNil(doc.property("address"))
-        XCTAssertNil(address.document)
-        XCTAssertFalse(address.exists)
-        XCTAssertNil(address.properties)
-        XCTAssertNil(address.property("street"))
-        XCTAssertNil(address.property("phones"))
+        XCTAssertNil(doc.getValue("address"))
+        XCTAssertNil(address?.document)
+        XCTAssertFalse((address?.exists)!)
+        XCTAssertNil(address?.properties)
+        XCTAssertNil(address?.getValue("street"))
+        XCTAssertNil(address?.getValue("phones"))
         
         // Check phones:
-        XCTAssertNil(phones.document)
-        XCTAssertFalse(phones.exists)
-        XCTAssertNil(phones.properties)
-        XCTAssertNil(phones.property("mobile"))
+        XCTAssertNil(phones?.document)
+        XCTAssertFalse((phones?.exists)!)
+        XCTAssertNil(phones?.properties)
+        XCTAssertNil(phones?.getValue("mobile"))
         
         // Check references:
-        XCTAssertNil(doc.property("references"))
-        XCTAssertNil(r1.document)
-        XCTAssertFalse(r1.exists)
-        XCTAssertNil(r1.properties)
-        XCTAssertNil(r1.property("name"))
-        XCTAssertNil(r2.document)
-        XCTAssertFalse(r2.exists)
-        XCTAssertNil(r2.properties)
-        XCTAssertNil(r2.property("name"))
+        XCTAssertNil(doc.getValue("references"))
+        XCTAssertNil(r1?.document)
+        XCTAssertFalse((r1?.exists)!)
+        XCTAssertNil(r1?.properties)
+        XCTAssertNil(r1?.getValue("name"))
+        XCTAssertNil(r2?.document)
+        XCTAssertFalse((r2?.exists)!)
+        
+        XCTAssertNil(r2?.properties)
+        XCTAssertNil(r2?.getValue("name"))
     }
 }

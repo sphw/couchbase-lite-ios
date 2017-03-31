@@ -25,8 +25,8 @@ class QueryTest: CBLTestCase {
         try db.inBatch {
             for i in 1...num {
                 let doc = db["doc\(i)"]
-                doc["number1"] = i
-                doc["number2"] = num - i
+                doc["number1"] = PropertyValue(i)
+                doc["number2"] = PropertyValue(num - i)
                 try doc.save()
                 numbers.append(doc.properties!)
             }
@@ -121,7 +121,7 @@ class QueryTest: CBLTestCase {
         // https://github.com/couchbase/couchbase-lite-ios/issues/1670
         let doc1 = db.document(withID: "doc1")
         doc1["name"] = "Scott"
-        doc1["address"] = NSNull()
+        doc1["address"] = PropertyValue(NSNull())
         try doc1.save()
         
         let doc2 = db.document(withID: "doc2")
@@ -169,7 +169,7 @@ class QueryTest: CBLTestCase {
         var numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
             XCTAssertEqual(doc.documentID, doc1.documentID);
-            XCTAssertEqual(doc["string"], "string");
+            XCTAssertEqual(doc["string"].string, "string");
         }
         XCTAssertEqual(numRows, 1);
         
@@ -178,7 +178,7 @@ class QueryTest: CBLTestCase {
         numRows = try verifyQuery(q) { (n, row) in
             let doc = row.document
             XCTAssertEqual(doc.documentID, doc1.documentID);
-            XCTAssertEqual(doc["string"], "string");
+            XCTAssertEqual(doc["string"].string, "string");
         }
         XCTAssertEqual(numRows, 1);
     }
@@ -206,7 +206,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc["name"]?["first"]
+            let v = doc["name"]["first"].string
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -223,7 +223,7 @@ class QueryTest: CBLTestCase {
         let q = Query.select().from(DataSource.database(db)).where(w).orderBy(o)
         let numRows = try verifyQuery(q, block: { (n, row) in
             let firstName = expected[Int(n)-1]
-            XCTAssertEqual(row.document["name"]!["first"], firstName)
+            XCTAssertEqual(row.document["name"]["first"].string, firstName)
         })
         XCTAssertEqual(Int(numRows), expected.count);
     }
@@ -242,7 +242,7 @@ class QueryTest: CBLTestCase {
         var firstNames: [String] = []
         let numRows = try verifyQuery(q, block: { (n, row) in
             let doc = row.document
-            let v: String? = doc["name"]?["first"]
+            let v = doc["name"]["first"].string
             if let firstName = v {
                 firstNames.append(firstName)
             }
@@ -286,7 +286,7 @@ class QueryTest: CBLTestCase {
             var firstNames: [String] = []
             let numRows = try verifyQuery(q, block: { (n, row) in
                 let doc = row.document
-                if let firstName: String = doc["name"]?["first"] {
+                if let firstName = doc["name"]["first"].string {
                     firstNames.append(firstName)
                 }
             })

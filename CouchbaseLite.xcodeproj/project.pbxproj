@@ -79,6 +79,7 @@
 		931112941E57DD34007690A6 /* CBLSubdocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 935294291E501055005CE4E8 /* CBLSubdocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		931112DC1E57F173007690A6 /* Subdocument.swift in Sources */ = {isa = PBXBuildFile; fileRef = 931112DB1E57F173007690A6 /* Subdocument.swift */; };
 		9317621F1E2D439700563506 /* CBLPredicateQuery+Internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */; };
+		932948431E8DD82F00DE10BC /* PropertyValue.swift in Sources */ = {isa = PBXBuildFile; fileRef = 932948421E8DD82F00DE10BC /* PropertyValue.swift */; };
 		933207AE1E773CFB000D9993 /* CBLJSONCoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933207AD1E773CFB000D9993 /* CBLJSONCoding.h */; };
 		933207AF1E773CFB000D9993 /* CBLJSONCoding.h in Headers */ = {isa = PBXBuildFile; fileRef = 933207AD1E773CFB000D9993 /* CBLJSONCoding.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		933208121E77415E000D9993 /* CBLQueryDataSource.h in Headers */ = {isa = PBXBuildFile; fileRef = 933208081E77415E000D9993 /* CBLQueryDataSource.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -448,6 +449,7 @@
 		72A87A0E1E32E858008466FF /* NotificationTest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = NotificationTest.m; sourceTree = "<group>"; };
 		931112DB1E57F173007690A6 /* Subdocument.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = Subdocument.swift; sourceTree = "<group>"; };
 		9317621E1E2D439700563506 /* CBLPredicateQuery+Internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "CBLPredicateQuery+Internal.h"; sourceTree = "<group>"; };
+		932948421E8DD82F00DE10BC /* PropertyValue.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PropertyValue.swift; sourceTree = "<group>"; };
 		933207AD1E773CFB000D9993 /* CBLJSONCoding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLJSONCoding.h; sourceTree = "<group>"; };
 		933208081E77415E000D9993 /* CBLQueryDataSource.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CBLQueryDataSource.h; sourceTree = "<group>"; };
 		933208091E77415E000D9993 /* CBLQueryDataSource.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CBLQueryDataSource.m; sourceTree = "<group>"; };
@@ -620,6 +622,7 @@
 				27BE3B531E4E92210012B74A /* Database+Query.swift */,
 				275F92A51E4D3A91007FD5A2 /* Document.swift */,
 				275F92A71E4D3AFB007FD5A2 /* Properties.swift */,
+				932948421E8DD82F00DE10BC /* PropertyValue.swift */,
 				27BE3B551E4E93000012B74A /* PredicateQuery.swift */,
 				93A2AFB91E830BF800A08CAE /* QueryRow.swift */,
 				27E35A911E8C4F4300E103F9 /* Replication.swift */,
@@ -1406,6 +1409,7 @@
 				275F92A61E4D3A91007FD5A2 /* Document.swift in Sources */,
 				93B503681E64B088002C4680 /* CBLSharedKeys.mm in Sources */,
 				275F928C1E4D3119007FD5A2 /* Database.swift in Sources */,
+				932948431E8DD82F00DE10BC /* PropertyValue.swift in Sources */,
 				938CDF1A1E807F14002EE790 /* From.swift in Sources */,
 				93AF51C61E80A70500E200F0 /* CBLQueryDataSource.m in Sources */,
 				93B503781E64B0BE002C4680 /* CBLInternal.mm in Sources */,

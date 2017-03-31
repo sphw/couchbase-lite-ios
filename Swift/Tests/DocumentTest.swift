@@ -30,17 +30,17 @@ class DocumentTest: CBLTestCase {
     }
 
     func testNewDoc() throws {
-        XCTAssert(!doc["prop"])
-        XCTAssertEqual(doc["prop"], 0)
-        XCTAssertEqual(doc["prop"], 0.0)
+        XCTAssertNil(doc["prop"].value)
+        XCTAssertEqual(doc["prop"].int, 0)
+        XCTAssertEqual(doc["prop"].double, 0.0)
 
-        let d: Date? = doc["prop"]
+        let d = doc["prop"].date
         XCTAssertNil(d)
 
-        let s: String? = doc["prop"]
+        let s = doc["prop"].string
         XCTAssertNil(s)
 
-        let a: Any? = doc.property("prop")
+        let a = doc.getValue("prop")
         XCTAssertNil(a)
 
         try doc.save()
@@ -53,34 +53,34 @@ class DocumentTest: CBLTestCase {
         doc["true"] = true
         doc["false"] = false
         doc["int"] = 123456
-        doc["float"] = Float(3.14)
+        doc["float"] = PropertyValue(Float(3.14))
         doc["double"] = 3.141592654
         doc["string"] = "capybara"
         doc["array"] = [1, 2, "three", 4.4]
         doc["dict"] = ["eenie": 1, "meenie": 2.2, "miney": "moe"]
-        doc["null"] = NSNull()
+        doc["null"] = PropertyValue(NSNull())
         doc["none"] = nil
-
+        
         let checkProperties = {
-            XCTAssert(self.doc["true"])
-            XCTAssert(!self.doc["false"])
-            XCTAssertEqual(self.doc["int"], 123456)
-            XCTAssert(self.doc["int"])
-            XCTAssertEqual(self.doc["float"], Float(3.14))
-            XCTAssertEqual(self.doc["float"], 3)
-            XCTAssertEqual(self.doc["double"], 3.141592654)
-            XCTAssertEqual(self.doc["double"], 3)
+            XCTAssert(self.doc["true"].bool)
+            XCTAssert(!self.doc["false"].bool)
+            XCTAssertEqual(self.doc["int"].int, 123456)
+            XCTAssert(self.doc["int"].value != nil)
+            XCTAssertEqual(self.doc["float"].float, Float(3.14))
+            XCTAssertEqual(self.doc["float"].int, 3)
+            XCTAssertEqual(self.doc["double"].double, 3.141592654)
+            XCTAssertEqual(self.doc["double"].int, 3)
 
-            let array: [Any] = self.doc["array"]!
+            let array = self.doc["array"].value as! [Any]
             XCTAssertEqual(array.count, 4)
             XCTAssert(array[0] as? Int == 1)
 
-            let dict: Subdocument? = self.doc["dict"]
-            XCTAssertEqual(dict?.properties?.count, 3)
-            XCTAssert(dict?["miney"] == "moe")
+            let dict = self.doc["dict"].subdocument!
+            XCTAssertEqual(dict.properties?.count, 3)
+            XCTAssert(dict["miney"].string == "moe")
             
-            XCTAssert(self.doc.property("null") as? NSNull != nil)
-            XCTAssertNil(self.doc.property("none"))
+            XCTAssert(self.doc.getValue("null") as? NSNull != nil)
+            XCTAssertNil(self.doc.getValue("none"))
             XCTAssertFalse(self.doc.contains("none"))
         }
 
@@ -107,41 +107,39 @@ class DocumentTest: CBLTestCase {
             ]
         ]
 
-        XCTAssertEqual(doc["weight"], 130.5)
-        var zip: Int? = doc["address"]?["zip"]
-        XCTAssertEqual(zip, 12345)
+        XCTAssertEqual(doc["weight"].float, 130.5)
+        XCTAssertEqual(doc["address"]["zip"].int, 12345)
 
         try doc.save()
         try reopenDB()
 
-        XCTAssertEqual(doc["weight"], 130.5)
-        zip = doc["address"]?["zip"]
-        XCTAssertEqual(zip, 12345)
+        XCTAssertEqual(doc["weight"].float, 130.5)
+        XCTAssertEqual(doc["address"]["zip"].int, 12345)
 
         doc["name"] = nil
 
         XCTAssert(!doc.contains("name"))
-        XCTAssertNil(doc.property("name"))
+        XCTAssertNil(doc.getValue("name"))
 
         try doc.save()
         try reopenDB()
 
         XCTAssert(!doc.contains("name"))
-        XCTAssertNil(doc.property("name"))
+        XCTAssertNil(doc.getValue("name"))
     }
 
     func testBlob() throws {
         let content = "12345".data(using: String.Encoding.utf8)!
         let data = Blob(contentType: "text/plain", data: content)
-        doc["data"] = data
+        doc["data"] = PropertyValue(data)
         doc["name"] = "Jim"
         try doc.save()
 
         try reopenDB()
 
-        XCTAssertEqual(doc["name"], "Jim")
-        XCTAssert(doc.property("data") as? Blob != nil)
-        let data2: Blob? = doc["data"]
+        XCTAssertEqual(doc["name"].string, "Jim")
+        XCTAssert(doc.getValue("data") as? Blob != nil)
+        let data2 = doc["data"].blob
         XCTAssert(data2 != nil)
         XCTAssertEqual(data2?.contentType, "text/plain")
         XCTAssertEqual(data2?.length, 5)

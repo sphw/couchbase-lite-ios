@@ -64,8 +64,7 @@ NSString* const kCBLDatabaseIsExternalUserInfoKey = @"CBLDatabaseIsExternalUserI
     NSString* _name;
     CBLDatabaseOptions* _options;
     C4DatabaseObserver* _obs;
-    NSMapTable<NSString*, CBLDocument*>* _documents;
-    NSMutableSet<CBLDocument*>* _unsavedDocuments;
+    NSUInteger _unsavedDocCount;
     CBLPredicateQuery* _allDocsQuery;
 }
 
@@ -169,8 +168,6 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
     _sharedKeys = cbl::SharedKeys(_c4db);
     _obs = c4dbobs_create(_c4db, dbObserverCallback, (__bridge void *)self);
-    _documents = [NSMapTable strongToWeakObjectsMapTable];
-    _unsavedDocuments = [NSMutableSet setWithCapacity: 100];
     
     return YES;
 }
@@ -186,12 +183,8 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
         return YES;
     
     CBLLog(Database, @"Closing %@ at path %@", self, self.path);
-    if (_unsavedDocuments.count > 0)
-        CBLWarn(Database, @"Closing %@ with %lu unsaved docs, such as %@",
-                self, (unsigned long)_unsavedDocuments.count, _unsavedDocuments.anyObject);
-    
-    _documents = nil;
-    _unsavedDocuments = nil;
+    if (_unsavedDocCount > 0)
+        CBLWarn(Database, @"Closing %@ with %lu unsaved docs", self, (unsigned long)_unsavedDocCount);
     
     C4Error err;
     if (!c4db_close(_c4db, &err))
@@ -345,9 +338,9 @@ static void dbObserverCallback(C4DatabaseObserver* obs, void* context) {
 
 - (void) document: (CBLDocument*)doc hasUnsavedChanges: (bool)unsaved {
     if (unsaved)
-        [_unsavedDocuments addObject: doc];
+        _unsavedDocCount++;
     else
-        [_unsavedDocuments removeObject: doc];
+        _unsavedDocCount--;
 }
 
 
@@ -458,9 +451,6 @@ static NSString* databasePath(NSString* name, NSString* dir) {
         for(uint32_t i = 0; i < nChanges; i++) {
             NSString *docID =slice2string(changes[i].docID);
             [docIDs addObject: docID];
-            if(external) {
-                [[_documents objectForKey: docID] changedExternally];
-            }
         }
         if (nChanges > 0)
             lastSequence = changes[nChanges-1].sequence;
@@ -493,21 +483,10 @@ static NSString* databasePath(NSString* name, NSString* dir) {
                      mustExist: (bool)mustExist
                          error: (NSError**)outError
 {
-    CBLDocument *doc = [_documents objectForKey: docID];
-    if (!doc) {
-        doc = [[CBLDocument alloc] initWithDatabase: self docID: docID
-                                          mustExist: mustExist
-                                              error: outError];
-        if (!doc)
-            return nil;
-        [_documents setObject: doc forKey: docID];
-    } else {
-        if (mustExist && !doc.exists) {
-            // Don't return a pre-instantiated CBLDocument if it doesn't exist
-            convertError(C4Error{LiteCoreDomain, kC4ErrorNotFound},  outError);
-            return nil;
-        }
-    }
+    CBLDocument* doc = [[CBLDocument alloc] initWithDatabase: self
+                                                       docID: docID
+                                                   mustExist: mustExist
+                                                       error: outError];
     return doc;
 }
 

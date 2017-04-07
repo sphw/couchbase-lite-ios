@@ -170,21 +170,6 @@ NSString* const kCBLDocumentIsExternalUserInfoKey = @"CBLDocumentIsExternalUserI
 #pragma mark - INTERNAL
 
 
-// Called by the CBLDatabase when the document has changed on disk.
-- (void)changedExternally {
-    // The current API design decision is that when a document has unsaved changes, it should
-    // not update with external changes and should not post notifications. Instead the conflict
-    // resolution will happen when the app saves the document.
-
-    if(!self.hasChanges) {
-        NSError* error;
-        if (![self loadDoc_mustExist: YES error: &error])
-            CBLWarn(Default, @"%@ failed to load external changes: %@", self, error);
-        [self postChangedNotificationExternal:YES];
-    }
-}
-
-
 - (void)postChangedNotificationExternal:(BOOL)external {
     NSDictionary* userInfo = external ? @{kCBLDocumentIsExternalUserInfoKey: @YES} : nil;
     [[NSNotificationCenter defaultCenter] postNotificationName: kCBLDocumentSavedNotification

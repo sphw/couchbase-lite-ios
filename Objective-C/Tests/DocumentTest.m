@@ -165,6 +165,7 @@
     return YES;
 }
 
+
 - (void) testNewDoc {
     NSError* error;
     
@@ -194,9 +195,8 @@
 - (void) testNewDocWithId {
     NSError* error;
     
-    AssertEqual(doc, self.db[@"doc1"]);
-    AssertNotNil(doc);
-    AssertEqual(doc.documentID, @"doc1");
+    doc = [self.db documentWithID: @"doc0"];
+    AssertEqual(doc.documentID, @"doc0");
     AssertEqual(doc.database, self.db);
     AssertFalse(doc.exists);
     AssertFalse(doc.isDeleted);
@@ -213,7 +213,6 @@
     Assert(doc.exists);
     AssertFalse(doc.isDeleted);
     AssertNil(doc.properties);
-    AssertEqual(doc, self.db[@"doc1"]);
 }
 
 

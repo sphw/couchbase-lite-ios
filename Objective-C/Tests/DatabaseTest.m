@@ -64,8 +64,6 @@
     AssertEqual(doc1.database, self.db);
     AssertFalse(doc1.exists);
     AssertFalse(doc1.isDeleted);
-    AssertEqual(doc1, [self.db documentWithID: @"doc1"]);
-    AssertEqual(doc1, self.db[@"doc1"]);
     AssertNil(doc1.properties);
 }
 

@@ -20,7 +20,6 @@ NS_ASSUME_NONNULL_BEGIN
                         mustExist: (BOOL)mustExist
                             error: (NSError**)outError;
 
-- (void)changedExternally;
 @end
 
 NS_ASSUME_NONNULL_END
